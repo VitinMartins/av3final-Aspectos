@@ -1,0 +1,50 @@
+import java_cup.runtime.*;
+
+parser code {:
+    scanner s;
+    parser(scanner s) { this.s = s; }
+:}
+
+
+terminal SEMI, MAIS, MENOS, VEZES, DIVIDIR, IGUAL, DIFERENTE, IGUAL_IGUAL, MAIOR, MENOR, LPAREN, RPAREN, LBRACE, RBRACE, VIRGULA, PONTO;
+terminal Keyword IF, ELSE, WHILE, RETURN;
+terminal Integer NUMERO_INTEIRO;
+terminal Double NUMERO_FLUTUANTE;
+terminal IDENTIFICADOR;
+
+non terminal expr, stmt, stmt_list;
+
+precedence left ELSE;
+precedence left IF;
+precedence left MAIS, MENOS;
+precedence left VEZES, DIVIDIR;
+precedence left DIFERENTE, MENOR, MAIOR, IGUAL_IGUAL;
+
+// Produções do parser
+stmt_list ::= stmt_list stmt
+           | stmt
+           ;
+
+stmt ::= expr SEMI                    {: System.out.println("Expressão: " + $expr); :}
+      | IF LPAREN expr RPAREN LBRACE stmt_list RBRACE ELSE LBRACE stmt_list RBRACE
+                                        {: System.out.println("Estrutura if-else detectada"); :}
+      | IF LPAREN expr RPAREN LBRACE stmt_list RBRACE
+                                        {: System.out.println("Estrutura if detectada"); :}
+      | WHILE LPAREN expr RPAREN LBRACE stmt_list RBRACE
+                                        {: System.out.println("Estrutura while detectada"); :}
+      | RETURN expr SEMI               {: System.out.println("Return detectado: " + $expr); :}
+      ;
+
+expr ::= expr:e1 DIFERENTE expr:e2    {: RESULT = ((e1 instanceof Double) ? (Double) e1 : (Integer) e1) != ((e2 instanceof Double) ? (Double) e2 : (Integer) e2); :}
+      | expr:e1 MENOR expr:e2         {: RESULT = ((e1 instanceof Double) ? (Double) e1 : (Integer) e1) < ((e2 instanceof Double) ? (Double) e2 : (Integer) e2); :}
+      | expr:e1 MAIS expr:e2          {: RESULT = ((e1 instanceof Double) ? (Double) e1 : (Integer) e1) + ((e2 instanceof Double) ? (Double) e2 : (Integer) e2); :}
+      | expr:e1 MENOS expr:e2         {: RESULT = ((e1 instanceof Double) ? (Double) e1 : (Integer) e1) - ((e2 instanceof Double) ? (Double) e2 : (Integer) e2); :}
+      | expr:e1 VEZES expr:e2         {: RESULT = ((e1 instanceof Double) ? (Double) e1 : (Integer) e1) * ((e2 instanceof Double) ? (Double) e2 : (Integer) e2); :}
+      | expr:e1 DIVIDIR expr:e2       {: RESULT = ((e1 instanceof Double) ? (Double) e1 : (Integer) e1) / ((e2 instanceof Double) ? (Double) e2 : (Integer) e2); :}
+      | MENOS expr:e                  {: RESULT = (e instanceof Double) ? -(Double) e : -(Integer) e; :}
+      | LPAREN expr:e RPAREN          {: RESULT = e; :}
+      | NUMERO_INTEIRO:n             {: RESULT = n; :}
+      | NUMERO_FLUTUANTE:f           {: RESULT = f; :}
+      | IDENTIFICADOR:id              {: RESULT = id; :}
+      ;
+
